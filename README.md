@@ -1,5 +1,5 @@
 # Stock Monitoring & Inventory Management System
-## 🎓 Final Year DSA + Data Science Project
+## 🎓 Data Structures & Algorithms Project
 
 A comprehensive inventory management system that demonstrates **6+ core data structures** combined with **data science analytics** and a modern **React frontend**.
 
