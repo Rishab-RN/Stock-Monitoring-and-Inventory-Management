@@ -16,49 +16,11 @@ A comprehensive inventory management system that demonstrates **6+ core data str
 | **Graph** | Supplier network, shortest path | O(V+E) |
 | **Queue** | FIFO transaction processing | O(1) |
 
-### Data Science Features
-- 📈 **Demand Forecasting** - SMA, EMA, Linear Regression
-- 📊 **Trend Analysis** - Seasonality detection, growth rates
-- 🔍 **Anomaly Detection** - Z-score based outliers
-- 📉 **Visualizations** - Matplotlib charts, Recharts
-
 ### Modern React Frontend
 - 🎨 Glassmorphism UI design
 - 📱 Fully responsive
 - 📊 Interactive Recharts dashboards
 - 🔄 Real-time WebSocket updates
-
-## 📁 Project Structure
-
-```
-Stock-Monitoring-and-Inventory-Management/
-├── backend/
-│   ├── core/
-│   │   ├── data_structures/    # Custom DSA implementations
-│   │   │   ├── hashmap.py      # HashMap with chaining
-│   │   │   ├── avl_tree.py     # Self-balancing BST
-│   │   │   ├── heap.py         # Min/Max Heap
-│   │   │   ├── trie.py         # Prefix tree
-│   │   │   ├── graph.py        # Weighted graph
-│   │   │   └── queue.py        # Transaction queue
-│   │   ├── inventory_engine.py # Main DSA engine
-│   │   └── models.py           # Data models
-│   ├── analytics/
-│   │   ├── forecasting.py      # Demand prediction
-│   │   ├── trend_analyzer.py   # Trend analysis
-│   │   └── visualizations.py   # Chart generation
-│   ├── api/
-│   │   └── main.py             # FastAPI backend
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── components/         # React components
-│   │   ├── pages/              # Page components
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   └── package.json
-└── README.md
-```
 
 ## 🛠️ Installation
 
@@ -159,7 +121,8 @@ This project demonstrates:
 
 - **Project**: Stock Monitoring & Inventory Management
 - **Course**: Data Structures & Algorithms
-- **Type**: Final Year Experiential Learning Project
+- **Type**: Experiential Learning Project
+- **By**: Rishab Rajesh Nayak & Nithesh B S
 
 ## 📄 License
 
