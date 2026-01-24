@@ -1,0 +1,8 @@
+INFO:     Started server process [21936]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+Inventory Engine initialized
+INFO:     127.0.0.1:55879 - "GET /api/products HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55894 - "GET /api/products HTTP/1.1" 200 OK
+^C

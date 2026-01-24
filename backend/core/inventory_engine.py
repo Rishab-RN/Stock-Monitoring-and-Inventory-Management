@@ -134,6 +134,13 @@ class InventoryEngine:
         # Check for low stock alert
         if product.is_low_stock:
             self._create_low_stock_alert(product)
+            
+        # Add to Min-Heap (Low Stock) - O(log n)
+        self.low_stock_heap.push((product.quantity, product.id))
+        
+        # Add to Max-Heap (Top Sellers) - O(log n)
+        if product.total_sold > 0:
+            self.top_sellers_heap.push((product.total_sold, product.id))
         
         return True, f"Product '{product.name}' added successfully"
     

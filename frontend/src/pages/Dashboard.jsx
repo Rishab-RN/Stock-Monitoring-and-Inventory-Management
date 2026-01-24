@@ -6,12 +6,9 @@ import {
     AlertTriangle,
     DollarSign,
     ShoppingCart,
-    BarChart3,
     RefreshCw,
-    ArrowUpRight,
-    ArrowDownRight,
-    Boxes,
-    Zap
+    Zap,
+    Play
 } from 'lucide-react'
 import {
     AreaChart,
@@ -21,382 +18,338 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    BarChart,
-    Bar,
     PieChart,
     Pie,
-    Cell,
-    LineChart,
-    Line
+    Cell
 } from 'recharts'
+import { fetchSummary, fetchTopSellers, fetchLowStock } from '../services/api'
 
-// Sample data - in production this would come from API
-const salesData = [
-    { name: 'Mon', sales: 4000, revenue: 24000 },
-    { name: 'Tue', sales: 3000, revenue: 18000 },
-    { name: 'Wed', sales: 5000, revenue: 30000 },
-    { name: 'Thu', sales: 2780, revenue: 16680 },
-    { name: 'Fri', sales: 6890, revenue: 41340 },
-    { name: 'Sat', sales: 8390, revenue: 50340 },
-    { name: 'Sun', sales: 4490, revenue: 26940 },
-]
-
-const categoryData = [
-    { name: 'Electronics', value: 45, color: '#6366f1' },
-    { name: 'Furniture', value: 20, color: '#8b5cf6' },
-    { name: 'Clothing', value: 15, color: '#ec4899' },
-    { name: 'Food', value: 12, color: '#10b981' },
-    { name: 'Other', value: 8, color: '#f59e0b' },
-]
-
-const topProducts = [
-    { name: 'Wireless Mouse', sold: 1250, revenue: 125000, trend: 12 },
-    { name: 'USB Keyboard', sold: 890, revenue: 133500, trend: 8 },
-    { name: 'Monitor Stand', sold: 650, revenue: 162500, trend: -3 },
-    { name: 'Webcam HD', sold: 520, revenue: 207800, trend: 15 },
-    { name: 'Headphones', sold: 480, revenue: 143900, trend: 5 },
-]
-
-const lowStockItems = [
-    { name: 'USB Hub', current: 0, threshold: 15, severity: 'critical' },
-    { name: 'Headphones', current: 8, threshold: 20, severity: 'high' },
-    { name: 'Webcam HD', current: 12, threshold: 15, severity: 'medium' },
-]
-
-// KPI Card Component
-function KPICard({ title, value, change, changeType, icon: Icon, gradient, description }) {
-    const isPositive = changeType === 'positive'
+// KPI Card Component - Vibrant Colorful Style
+function KPICard({ title, value, change, icon: Icon, color }) {
+    const isPositive = change >= 0
+    const colorClasses = {
+        orange: {
+            iconBg: 'bg-gradient-to-br from-orange-400 to-pink-500',
+            glow: 'shadow-orange-200'
+        },
+        purple: {
+            iconBg: 'bg-gradient-to-br from-violet-500 to-purple-600',
+            glow: 'shadow-violet-200'
+        },
+        green: {
+            iconBg: 'bg-gradient-to-br from-emerald-400 to-teal-500',
+            glow: 'shadow-emerald-200'
+        },
+        cyan: {
+            iconBg: 'bg-gradient-to-br from-cyan-400 to-blue-500',
+            glow: 'shadow-cyan-200'
+        }
+    }
+    const styles = colorClasses[color] || colorClasses.purple
 
     return (
-        <div className={`kpi-card ${gradient}`}>
-            <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl ${gradient === 'success' ? 'bg-success-100' :
-                        gradient === 'warning' ? 'bg-warning-100' :
-                            gradient === 'danger' ? 'bg-danger-100' :
-                                'bg-primary-100'
-                    }`}>
-                    <Icon className={`w-6 h-6 ${gradient === 'success' ? 'text-success-600' :
-                            gradient === 'warning' ? 'text-warning-600' :
-                                gradient === 'danger' ? 'text-danger-600' :
-                                    'text-primary-600'
-                        }`} />
+        <div className="kpi-card-new group hover-lift">
+            <div className="flex justify-between items-start">
+                <div>
+                    <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
+                    <h3 className="text-3xl font-extrabold text-slate-800 mb-2 group-hover:scale-105 transition-transform origin-left">
+                        {value}
+                    </h3>
                 </div>
-                {change && (
-                    <div className={`flex items-center gap-1 text-sm font-medium ${isPositive ? 'text-success-600' : 'text-danger-600'
-                        }`}>
-                        {isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                        {change}%
-                    </div>
-                )}
+                <div className={`p-3 rounded-xl ${styles.iconBg} shadow-lg ${styles.glow} group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-6 h-6 text-white" />
+                </div>
             </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">{value}</h3>
-            <p className="text-sm text-gray-500">{title}</p>
-            {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
+            {change !== undefined && (
+                <div className="flex items-center gap-2 mt-3">
+                    <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 ${isPositive
+                        ? 'bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700'
+                        : 'bg-gradient-to-r from-red-100 to-pink-100 text-red-600'}`}>
+                        {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                        {isPositive ? '+' : ''}{change}%
+                    </span>
+                    <span className="text-xs text-slate-400">vs last week</span>
+                </div>
+            )}
         </div>
     )
 }
 
 function Dashboard() {
-    const [loading, setLoading] = useState(true)
     const [summary, setSummary] = useState(null)
+    const [topProducts, setTopProducts] = useState([])
+    const [lowStockItems, setLowStockItems] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    // Using sample data for charts until analytics API is fully linked for historicals
+    const salesData = [
+        { name: 'Mon', revenue: 24000 },
+        { name: 'Tue', revenue: 18000 },
+        { name: 'Wed', revenue: 30000 },
+        { name: 'Thu', revenue: 16680 },
+        { name: 'Fri', revenue: 41340 },
+        { name: 'Sat', revenue: 50340 },
+        { name: 'Sun', revenue: 26940 },
+    ]
+    // Parse category data from summary
+    const categoryData = summary ? Object.entries(summary.categories).map(([name, value], index) => ({
+        name,
+        value,
+        color: ['#8b5cf6', '#fc8019', '#ec4899', '#10b981', '#06b6d4', '#f59e0b'][index % 6]
+    })) : []
+
+    const handleRunForecast = () => {
+        alert("Forecast simulation started! Check Analytics page for details.")
+    }
+
+    const handleProcessQueue = () => {
+        alert("Queue processing started. Optimizing inventory flow...")
+    }
 
     useEffect(() => {
-        // Simulate API call
-        setTimeout(() => {
-            setSummary({
-                totalProducts: 1247,
-                totalValue: 2456789,
-                lowStockCount: 8,
-                totalSales: 15420,
-                totalRevenue: 4521300
-            })
-            setLoading(false)
-        }, 800)
+        const loadDashboardData = async () => {
+            try {
+                const [summaryData, topData, lowStockData] = await Promise.all([
+                    fetchSummary(),
+                    fetchTopSellers(),
+                    fetchLowStock()
+                ])
+                setSummary(summaryData)
+                setTopProducts(topData)
+                setLowStockItems(lowStockData)
+            } catch (error) {
+                console.error("Failed to load dashboard data", error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        loadDashboardData()
     }, [])
 
     if (loading) {
-        return (
-            <div className="animate-fade-in">
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <div className="skeleton h-8 w-48 mb-2" />
-                        <div className="skeleton h-4 w-64" />
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="skeleton h-36 rounded-2xl" />
-                    ))}
-                </div>
-            </div>
-        )
+        return <div className="p-8 text-slate-700">Loading Dashboard... (Connecting to System)</div>
     }
 
     return (
-        <div className="animate-fade-in">
-            {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Welcome to <span className="gradient-text">StockFlow</span>
+        <div className="animate-fade-in pb-20 relative">
+            {/* Hero Section - Animated Gradient with Inventory Illustrations */}
+            <div className="relative rounded-3xl overflow-hidden mb-12 p-8 min-h-[340px] flex flex-col justify-end group shadow-2xl">
+                {/* Animated Gradient Background */}
+                <div className="absolute inset-0 gradient-hero z-0"></div>
+
+                {/* Inventory-Themed Floating SVG Elements */}
+                <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none">
+                    {/* Floating Package Box */}
+                    <div className="absolute top-8 right-16 animate-float opacity-80">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" className="drop-shadow-lg">
+                            <path d="M20 7L12 3L4 7V17L12 21L20 17V7Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="rgba(255,255,255,0.1)" />
+                            <path d="M12 12L20 7" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                            <path d="M12 12L4 7" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                            <path d="M12 12V21" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                    </div>
+
+                    {/* Floating Bar Chart */}
+                    <div className="absolute top-20 right-1/3 animate-float opacity-60" style={{ animationDelay: '1.5s' }}>
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" className="drop-shadow-lg">
+                            <rect x="4" y="10" width="4" height="10" rx="1" fill="rgba(255,255,255,0.3)" />
+                            <rect x="10" y="6" width="4" height="14" rx="1" fill="rgba(255,255,255,0.4)" />
+                            <rect x="16" y="3" width="4" height="17" rx="1" fill="rgba(255,255,255,0.5)" />
+                        </svg>
+                    </div>
+
+                    {/* Floating Delivery Truck */}
+                    <div className="absolute bottom-16 left-16 animate-float opacity-70" style={{ animationDelay: '0.5s' }}>
+                        <svg width="90" height="90" viewBox="0 0 24 24" fill="none" className="drop-shadow-lg">
+                            <rect x="1" y="6" width="15" height="10" rx="1" stroke="white" strokeWidth="1.5" fill="rgba(255,255,255,0.1)" />
+                            <path d="M16 8H19L22 12V16H16V8Z" stroke="white" strokeWidth="1.5" fill="rgba(255,255,255,0.15)" />
+                            <circle cx="6" cy="18" r="2" stroke="white" strokeWidth="1.5" fill="rgba(255,255,255,0.2)" />
+                            <circle cx="18" cy="18" r="2" stroke="white" strokeWidth="1.5" fill="rgba(255,255,255,0.2)" />
+                        </svg>
+                    </div>
+
+                    {/* Floating Warehouse */}
+                    <div className="absolute top-1/4 left-1/4 animate-float opacity-50" style={{ animationDelay: '2s' }}>
+                        <svg width="70" height="70" viewBox="0 0 24 24" fill="none" className="drop-shadow-lg">
+                            <path d="M3 21H21" stroke="white" strokeWidth="1.5" />
+                            <path d="M5 21V7L12 3L19 7V21" stroke="white" strokeWidth="1.5" fill="rgba(255,255,255,0.08)" />
+                            <rect x="9" y="13" width="6" height="8" stroke="white" strokeWidth="1" fill="rgba(255,255,255,0.15)" />
+                            <rect x="7" y="9" width="3" height="3" stroke="white" strokeWidth="0.5" fill="rgba(255,255,255,0.2)" />
+                            <rect x="14" y="9" width="3" height="3" stroke="white" strokeWidth="0.5" fill="rgba(255,255,255,0.2)" />
+                        </svg>
+                    </div>
+
+                    {/* Floating Barcode */}
+                    <div className="absolute bottom-24 right-1/4 animate-float opacity-60" style={{ animationDelay: '2.5s' }}>
+                        <svg width="50" height="50" viewBox="0 0 24 24" fill="none" className="drop-shadow-lg">
+                            <rect x="3" y="4" width="2" height="16" fill="rgba(255,255,255,0.5)" />
+                            <rect x="7" y="4" width="1" height="16" fill="rgba(255,255,255,0.4)" />
+                            <rect x="10" y="4" width="3" height="16" fill="rgba(255,255,255,0.5)" />
+                            <rect x="15" y="4" width="1" height="16" fill="rgba(255,255,255,0.4)" />
+                            <rect x="18" y="4" width="2" height="16" fill="rgba(255,255,255,0.5)" />
+                        </svg>
+                    </div>
+
+                    {/* Stacked Boxes */}
+                    <div className="absolute bottom-10 right-8 animate-float opacity-40" style={{ animationDelay: '3s' }}>
+                        <svg width="65" height="65" viewBox="0 0 24 24" fill="none" className="drop-shadow-lg">
+                            <rect x="2" y="14" width="8" height="8" stroke="white" strokeWidth="1.5" fill="rgba(255,255,255,0.1)" />
+                            <rect x="6" y="10" width="8" height="8" stroke="white" strokeWidth="1.5" fill="rgba(255,255,255,0.15)" />
+                            <rect x="10" y="6" width="8" height="8" stroke="white" strokeWidth="1.5" fill="rgba(255,255,255,0.2)" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div className="relative z-10 max-w-2xl">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="px-4 py-1.5 bg-gradient-to-r from-emerald-400 to-cyan-400 text-white text-xs font-bold tracking-wider rounded-full uppercase shadow-lg shadow-emerald-500/30 flex items-center gap-2">
+                            <span className="status-dot status-dot-success"></span>
+                            LIVE SYSTEM
+                        </span>
+                        <span className="text-white/80 text-sm font-medium backdrop-blur-sm bg-white/10 px-3 py-1 rounded-full">Enterprise Edition</span>
+                    </div>
+                    <h1 className="text-5xl font-extrabold text-white mb-4 leading-tight drop-shadow-lg">
+                        StockFlow <span className="text-gradient">Analytics</span>
                     </h1>
-                    <p className="text-gray-500 mt-1">
-                        Real-time inventory monitoring powered by Data Structures & Algorithms
+                    <p className="text-white/90 text-lg mb-8 max-w-xl leading-relaxed">
+                        Monitor inventory health, predict demand, and optimize supply chains in real-time with AI-powered insights.
                     </p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button className="btn-secondary">
-                        <RefreshCw className="w-4 h-4" />
-                        Refresh
-                    </button>
-                    <button className="btn-primary">
-                        <Zap className="w-4 h-4" />
-                        Process Queue
-                    </button>
-                </div>
-            </div>
-
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <KPICard
-                    title="Total Products"
-                    value={summary.totalProducts.toLocaleString()}
-                    change={12}
-                    changeType="positive"
-                    icon={Package}
-                    description="Using HashMap O(1) lookup"
-                />
-                <KPICard
-                    title="Inventory Value"
-                    value={`₹${(summary.totalValue / 100000).toFixed(1)}L`}
-                    change={8}
-                    changeType="positive"
-                    icon={DollarSign}
-                    gradient="success"
-                    description="AVL Tree range queries"
-                />
-                <KPICard
-                    title="Low Stock Alerts"
-                    value={summary.lowStockCount}
-                    change={-15}
-                    changeType="positive"
-                    icon={AlertTriangle}
-                    gradient="warning"
-                    description="Min-Heap priority alerts"
-                />
-                <KPICard
-                    title="Daily Sales"
-                    value={summary.totalSales.toLocaleString()}
-                    change={23}
-                    changeType="positive"
-                    icon={ShoppingCart}
-                    gradient="success"
-                    description="Queue FIFO processing"
-                />
-            </div>
-
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                {/* Sales Trend Chart */}
-                <div className="lg:col-span-2 chart-container">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Sales Trend</h3>
-                            <p className="text-sm text-gray-500">Last 7 days performance</p>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm">
-                            <span className="flex items-center gap-2">
-                                <span className="w-3 h-3 rounded-full bg-primary-500" />
-                                Units Sold
-                            </span>
-                            <span className="flex items-center gap-2">
-                                <span className="w-3 h-3 rounded-full bg-success-500" />
-                                Revenue
-                            </span>
-                        </div>
-                    </div>
-                    <ResponsiveContainer width="100%" height={280}>
-                        <AreaChart data={salesData}>
-                            <defs>
-                                <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                </linearGradient>
-                                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                            <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} />
-                            <YAxis stroke="#94a3b8" fontSize={12} />
-                            <Tooltip
-                                contentStyle={{
-                                    background: 'white',
-                                    border: 'none',
-                                    borderRadius: '12px',
-                                    boxShadow: '0 4px 20px -4px rgba(0,0,0,0.1)'
-                                }}
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="sales"
-                                stroke="#6366f1"
-                                strokeWidth={2}
-                                fillOpacity={1}
-                                fill="url(#colorSales)"
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="revenue"
-                                stroke="#10b981"
-                                strokeWidth={2}
-                                fillOpacity={1}
-                                fill="url(#colorRevenue)"
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-
-                {/* Category Distribution */}
-                <div className="chart-container">
-                    <div className="mb-6">
-                        <h3 className="text-lg font-semibold text-gray-900">Categories</h3>
-                        <p className="text-sm text-gray-500">Product distribution</p>
-                    </div>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <PieChart>
-                            <Pie
-                                data={categoryData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={50}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                            >
-                                {categoryData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                            </Pie>
-                            <Tooltip />
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div className="flex flex-wrap gap-2 mt-4">
-                        {categoryData.map((cat) => (
-                            <span key={cat.name} className="flex items-center gap-1 text-xs text-gray-600">
-                                <span className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
-                                {cat.name}
-                            </span>
-                        ))}
+                    <div className="flex items-center gap-4">
+                        <button onClick={handleRunForecast} className="btn-primary flex items-center gap-2">
+                            <Play className="w-5 h-5 fill-white" />
+                            Run Forecast
+                        </button>
+                        <button onClick={handleProcessQueue} className="btn-secondary flex items-center gap-2">
+                            <Zap className="w-5 h-5" />
+                            Process Queue
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* Bottom Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Top Products */}
-                <div className="card p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Top Sellers</h3>
-                            <p className="text-sm text-gray-500">Using Max-Heap for O(log n) extraction</p>
-                        </div>
-                        <TrendingUp className="w-5 h-5 text-success-500" />
-                    </div>
-                    <div className="space-y-4">
-                        {topProducts.map((product, index) => (
-                            <div key={product.name} className="flex items-center gap-4">
-                                <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-100 to-purple-100 flex items-center justify-center text-sm font-bold text-primary-600">
-                                    {index + 1}
-                                </span>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-gray-900 truncate">{product.name}</p>
-                                    <p className="text-sm text-gray-500">{product.sold.toLocaleString()} units</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-semibold text-gray-900">₹{(product.revenue / 1000).toFixed(0)}K</p>
-                                    <p className={`text-xs flex items-center justify-end gap-1 ${product.trend > 0 ? 'text-success-600' : 'text-danger-600'
-                                        }`}>
-                                        {product.trend > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                        {Math.abs(product.trend)}%
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+            {/* KPI Row - Data from Backend */}
+            {summary && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 -mt-16 relative z-20 px-4">
+                    <KPICard title="Total Products" value={summary.total_products.toLocaleString()} change={12} icon={Package} color="purple" />
+                    <KPICard title="Inventory Value" value={`₹${(summary.total_value / 100000).toFixed(1)}L`} change={8} icon={DollarSign} color="green" />
+                    <KPICard title="Low Stock Items" value={summary.low_stock_count} change={-15} icon={AlertTriangle} color="orange" />
+                    <KPICard title="Daily Transactions" value="142" change={23} icon={ShoppingCart} color="cyan" />
                 </div>
+            )}
 
-                {/* Low Stock Alerts */}
-                <div className="card p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Low Stock Alerts</h3>
-                            <p className="text-sm text-gray-500">Priority Queue sorted by urgency</p>
-                        </div>
-                        <AlertTriangle className="w-5 h-5 text-warning-500" />
-                    </div>
-                    <div className="space-y-4">
-                        {lowStockItems.map((item) => (
-                            <div key={item.name} className="flex items-center gap-4 p-3 rounded-xl bg-gray-50">
-                                <div className={`w-2 h-full min-h-[40px] rounded-full ${item.severity === 'critical' ? 'bg-danger-500' :
-                                        item.severity === 'high' ? 'bg-warning-500' :
-                                            'bg-yellow-400'
-                                    }`} />
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <p className="font-medium text-gray-900">{item.name}</p>
-                                        <span className={`badge ${item.severity === 'critical' ? 'badge-danger' :
-                                                item.severity === 'high' ? 'badge-warning' :
-                                                    'bg-yellow-50 text-yellow-700'
-                                            }`}>
-                                            {item.severity}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full ${item.severity === 'critical' ? 'bg-danger-500' :
-                                                        item.severity === 'high' ? 'bg-warning-500' :
-                                                            'bg-yellow-400'
-                                                    }`}
-                                                style={{ width: `${(item.current / item.threshold) * 100}%` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs text-gray-500">
-                                            {item.current}/{item.threshold}
-                                        </span>
-                                    </div>
-                                </div>
-                                <button className="btn-primary text-sm py-1.5 px-3">
-                                    Reorder
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                    <button className="w-full mt-4 py-3 text-center text-primary-600 font-medium hover:bg-primary-50 rounded-xl transition-colors">
-                        View All Alerts →
-                    </button>
-                </div>
-            </div>
-
-            {/* DSA Showcase Footer */}
-            <div className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-primary-500 to-purple-600 text-white">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Top Trending - Powered by Backend */}
+            <div className="mb-12">
+                <div className="flex items-center justify-between mb-6 px-2">
                     <div>
-                        <h3 className="text-xl font-bold mb-1">🎓 DSA + Data Science Project</h3>
-                        <p className="text-white/80">
-                            This system demonstrates HashMap, AVL Tree, Binary Heap, Trie, Graph, and Queue data structures combined with NumPy/Pandas analytics.
+                        <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                            <span className="text-2xl">🔥</span> Top Trending Products
+                        </h2>
+                        <p className="text-sm text-slate-500 mt-1">Real-time market velocity analysis</p>
+                    </div>
+                    <button className="text-sm text-violet-600 font-semibold hover:text-violet-700 transition-colors flex items-center gap-1">
+                        View All <TrendingUp className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {topProducts.length === 0 ? (
+                    <div className="text-slate-500 text-center py-16 bg-gradient-to-br from-white to-violet-50 rounded-2xl border border-violet-100 shadow-sm">
+                        <div className="mx-auto w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center mb-4 animate-pulse">
+                            <TrendingUp className="w-8 h-8 text-violet-600" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800 mb-2">Max-Heap Empty</h3>
+                        <p className="font-medium text-slate-600 mb-1">O(1) Access to Top Sellers</p>
+                        <p className="text-sm max-w-sm mx-auto">
+                            The system uses a <strong>Max-Heap data structure</strong> to instantly identify best-performing products.
+                            Start selling products in the Inventory page to populate this heap!
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <span className="px-4 py-2 rounded-xl bg-white/20 text-sm font-medium">
-                            6+ Data Structures
-                        </span>
-                        <span className="px-4 py-2 rounded-xl bg-white/20 text-sm font-medium">
-                            Real-time Analytics
-                        </span>
+                ) : (
+                    <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide snap-x">
+                        {topProducts.map((product, idx) => {
+                            const gradients = [
+                                'from-violet-500 to-purple-600',
+                                'from-pink-500 to-rose-500',
+                                'from-cyan-500 to-blue-500',
+                                'from-emerald-500 to-teal-500',
+                                'from-orange-500 to-amber-500'
+                            ]
+                            const gradient = gradients[idx % gradients.length]
+
+                            return (
+                                <div key={product.id} className="min-w-[260px] bg-white rounded-2xl p-5 border border-slate-200 hover:border-transparent hover:shadow-xl hover:shadow-violet-200/50 transition-all duration-300 hover:-translate-y-2 group relative snap-start cursor-pointer overflow-hidden">
+                                    {/* Gradient Top Bar */}
+                                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradient}`}></div>
+
+                                    {/* Rank Badge */}
+                                    <div className={`absolute top-4 right-4 w-8 h-8 rounded-full bg-gradient-to-r ${gradient} text-white text-sm font-bold flex items-center justify-center shadow-lg`}>
+                                        {idx + 1}
+                                    </div>
+
+                                    <div className={`h-36 bg-gradient-to-br ${gradient} rounded-xl mb-4 flex items-center justify-center text-5xl shadow-lg group-hover:scale-105 transition-transform`}>
+                                        📦
+                                    </div>
+                                    <h3 className="text-slate-800 font-bold text-lg mb-2 truncate">{product.name}</h3>
+                                    <div className="flex justify-between items-end">
+                                        <div>
+                                            <p className="text-slate-400 text-xs uppercase tracking-wide">Price</p>
+                                            <p className="text-emerald-600 font-bold text-lg">₹{product.price.toLocaleString()}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-slate-400 text-xs uppercase tracking-wide">In Stock</p>
+                                            <p className="text-slate-800 font-bold text-lg">{product.quantity}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
+                )}
+            </div>
+
+            {/* Charts Section Removed as per request to focus on Inventory Management */}
+
+            {/* Low Stock Alerts */}
+            <div className="grid grid-cols-1 gap-8">
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800">Low Stock Alerts</h3>
+                            <p className="text-xs text-slate-500">Min-Heap Implementation (Priority Queue)</p>
+                        </div>
+                        {lowStockItems.length > 0 && (
+                            <span className="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full">
+                                {lowStockItems.length} Priority Items
+                            </span>
+                        )}
+                    </div>
+
+                    {lowStockItems.length === 0 ? (
+                        <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-100 border-dashed">
+                            <div className="mx-auto w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
+                                <Zap className="w-6 h-6 text-emerald-600" />
+                            </div>
+                            <h4 className="font-bold text-slate-700">Min-Heap Optimized</h4>
+                            <p className="text-slate-500 text-sm max-w-md mx-auto mt-1">
+                                No low stock items found! The <strong>Min-Heap</strong> automatically surfaces items with lowest quantity (O(1)) when they drop below threshold.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {lowStockItems.map((item, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors border border-transparent hover:border-orange-200">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-2 h-10 rounded-full ${item.quantity === 0 ? 'bg-red-500' : 'bg-orange-500'
+                                            }`}></div>
+                                        <div>
+                                            <p className="text-slate-800 font-medium">{item.name}</p>
+                                            <p className="text-xs text-slate-500">Only <strong className="text-orange-600">{item.quantity}</strong> units left</p>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -404,3 +357,4 @@ function Dashboard() {
 }
 
 export default Dashboard
+

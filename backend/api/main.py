@@ -27,7 +27,7 @@ from analytics import DemandForecaster, TrendAnalyzer, InventoryAnalytics, Inven
 # =====================================
 
 class ProductCreate(BaseModel):
-    """Request model for creating a product."""
+    # Request model for creating a product
     id: str = Field(..., description="Unique product ID")
     name: str = Field(..., description="Product name")
     category: str = Field(default="Other", description="Product category")
@@ -44,7 +44,7 @@ class ProductCreate(BaseModel):
 
 
 class ProductUpdate(BaseModel):
-    """Request model for updating a product."""
+    # Request model for updating a product
     name: Optional[str] = None
     category: Optional[str] = None
     quantity: Optional[int] = None
@@ -58,7 +58,7 @@ class ProductUpdate(BaseModel):
 
 
 class TransactionCreate(BaseModel):
-    """Request model for creating a transaction."""
+    # Request model for creating a transaction
     product_id: str
     transaction_type: str = Field(..., pattern="^(sale|restock|return|adjustment)$")
     quantity: int = Field(..., gt=0)
@@ -66,7 +66,7 @@ class TransactionCreate(BaseModel):
 
 
 class SupplierCreate(BaseModel):
-    """Request model for creating a supplier."""
+    # Request model for creating a supplier
     id: str
     name: str
     contact_email: str = ""
@@ -77,7 +77,7 @@ class SupplierCreate(BaseModel):
 
 
 class ForecastRequest(BaseModel):
-    """Request model for forecast."""
+    # Request model for forecast
     product_id: str
     periods: int = Field(default=30, ge=1, le=90)
     method: str = Field(default="auto", pattern="^(auto|sma|ema|linear)$")
@@ -116,7 +116,7 @@ manager = ConnectionManager()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan - initialize and cleanup."""
+    # Application lifespan - initialize and cleanup
     global engine, analytics, visualizer
     
     # Initialize
@@ -133,29 +133,29 @@ async def lifespan(app: FastAPI):
         # Load sample data for demo
         _load_sample_data()
     
-    print("✅ Inventory Engine initialized")
+    print("Inventory Engine initialized")
     
     yield
     
     # Cleanup - save state
     os.makedirs(data_dir, exist_ok=True)
     engine.save_to_json(state_file)
-    print("✅ State saved")
+    print("State saved")
 
 
 def _load_sample_data():
-    """Load sample data for demonstration."""
+    # Load sample data for demonstration
     sample_products = [
-        {"id": "PROD001", "name": "Wireless Mouse", "category": "Electronics", "quantity": 150, "price": 999, "cost": 450, "threshold": 20},
-        {"id": "PROD002", "name": "USB Keyboard", "category": "Electronics", "quantity": 85, "price": 1499, "cost": 700, "threshold": 15},
-        {"id": "PROD003", "name": "Monitor Stand", "category": "Furniture", "quantity": 45, "price": 2499, "cost": 1200, "threshold": 10},
-        {"id": "PROD004", "name": "Webcam HD", "category": "Electronics", "quantity": 12, "price": 3999, "cost": 1800, "threshold": 15},
-        {"id": "PROD005", "name": "Desk Lamp", "category": "Furniture", "quantity": 200, "price": 799, "cost": 350, "threshold": 25},
-        {"id": "PROD006", "name": "Headphones", "category": "Electronics", "quantity": 8, "price": 2999, "cost": 1400, "threshold": 20},
-        {"id": "PROD007", "name": "Mouse Pad XL", "category": "Electronics", "quantity": 300, "price": 499, "cost": 150, "threshold": 30},
-        {"id": "PROD008", "name": "USB Hub", "category": "Electronics", "quantity": 0, "price": 1299, "cost": 600, "threshold": 15},
-        {"id": "PROD009", "name": "Cable Organizer", "category": "Home", "quantity": 180, "price": 299, "cost": 100, "threshold": 20},
-        {"id": "PROD010", "name": "Laptop Stand", "category": "Furniture", "quantity": 55, "price": 1999, "cost": 900, "threshold": 10},
+        {"id": "PROD001", "name": "Wireless Mouse", "category": "Electronics", "quantity": 150, "price": 999, "cost": 450, "threshold": 20, "total_sold": 1250, "velocity": 12.5},
+        {"id": "PROD002", "name": "USB Keyboard", "category": "Electronics", "quantity": 85, "price": 1499, "cost": 700, "threshold": 15, "total_sold": 890, "velocity": 8.2},
+        {"id": "PROD003", "name": "Monitor Stand", "category": "Furniture", "quantity": 45, "price": 2499, "cost": 1200, "threshold": 10, "total_sold": 650, "velocity": 5.4},
+        {"id": "PROD004", "name": "Webcam HD", "category": "Electronics", "quantity": 12, "price": 3999, "cost": 1800, "threshold": 15, "total_sold": 520, "velocity": 15.1},
+        {"id": "PROD005", "name": "Desk Lamp", "category": "Furniture", "quantity": 200, "price": 799, "cost": 350, "threshold": 25, "total_sold": 430, "velocity": 4.8},
+        {"id": "PROD006", "name": "Headphones", "category": "Electronics", "quantity": 8, "price": 2999, "cost": 1400, "threshold": 20, "total_sold": 480, "velocity": 5.2},
+        {"id": "PROD007", "name": "Mouse Pad XL", "category": "Electronics", "quantity": 300, "price": 499, "cost": 150, "threshold": 30, "total_sold": 920, "velocity": 10.5},
+        {"id": "PROD008", "name": "USB Hub", "category": "Electronics", "quantity": 0, "price": 1299, "cost": 600, "threshold": 15, "total_sold": 340, "velocity": 3.8},
+        {"id": "PROD009", "name": "Cable Organizer", "category": "Home", "quantity": 180, "price": 299, "cost": 100, "threshold": 20, "total_sold": 670, "velocity": 6.9},
+        {"id": "PROD010", "name": "Laptop Stand", "category": "Furniture", "quantity": 55, "price": 1999, "cost": 900, "threshold": 10, "total_sold": 380, "velocity": 4.1},
     ]
     
     for p_data in sample_products:
@@ -169,7 +169,10 @@ def _load_sample_data():
             cost=p_data["cost"],
             threshold=p_data["threshold"],
             reorder_point=p_data["threshold"] * 2,
-            reorder_quantity=p_data["threshold"] * 5
+            reorder_quantity=p_data["threshold"] * 5,
+            total_sold=p_data.get("total_sold", 0),
+            velocity=p_data.get("velocity", 0.0),
+            total_revenue=p_data.get("total_sold", 0) * p_data["price"]
         )
         engine.add_product(product)
 
@@ -198,7 +201,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    """API root endpoint."""
+    # API root endpoint
     return {
         "name": "Stock Monitoring & Inventory Management API",
         "version": "1.0.0",
@@ -222,26 +225,16 @@ async def get_all_products(
     max_price: Optional[float] = None,
     limit: int = Query(default=100, le=500)
 ):
-    """
-    Get all products with optional filtering.
-    
-    DSA Used:
-    - HashMap for full listing
-    - Trie for search
-    - AVL Tree for price range
-    """
+    # Get all products with optional filtering.
+    # DSA Used: Trie for search, AVL Tree for range, etc.
     if search:
-        # Use Trie for search - O(m + k)
         products = engine.search_products(search, limit)
     elif min_price is not None and max_price is not None:
-        # Use AVL Tree for range query - O(log n + k)
         products = engine.get_products_in_price_range(min_price, max_price)
     else:
-        # Get all products - O(n)
         products = engine.get_all_products()
     
-    # Apply additional filters
-    if category:
+    if category and category.lower() != 'all':
         products = [p for p in products if p.category.lower() == category.lower()]
     
     if low_stock_only:
@@ -255,11 +248,7 @@ async def get_all_products(
 
 @app.get("/api/products/{product_id}", tags=["Products"])
 async def get_product(product_id: str):
-    """
-    Get a single product by ID.
-    
-    DSA Used: HashMap - O(1)
-    """
+    # Get a single product by ID.
     product = engine.get_product(product_id)
     if not product:
         raise HTTPException(status_code=404, detail=f"Product {product_id} not found")
@@ -268,15 +257,7 @@ async def get_product(product_id: str):
 
 @app.post("/api/products", tags=["Products"])
 async def create_product(product_data: ProductCreate):
-    """
-    Create a new product.
-    
-    DSA Used:
-    - HashMap for storage
-    - AVL Tree for indexing
-    - Trie for search
-    - Heap for alerts
-    """
+    # Create a new product.
     product = Product(
         id=product_data.id,
         name=product_data.name,
@@ -298,7 +279,6 @@ async def create_product(product_data: ProductCreate):
     if not success:
         raise HTTPException(status_code=400, detail=message)
     
-    # Broadcast update
     await manager.broadcast({
         "type": "product_added",
         "product": product.to_dict()
@@ -309,7 +289,7 @@ async def create_product(product_data: ProductCreate):
 
 @app.put("/api/products/{product_id}", tags=["Products"])
 async def update_product(product_id: str, updates: ProductUpdate):
-    """Update a product."""
+    # Update a product.
     update_dict = {k: v for k, v in updates.dict().items() if v is not None}
     
     if not update_dict:
@@ -322,7 +302,6 @@ async def update_product(product_id: str, updates: ProductUpdate):
     
     product = engine.get_product(product_id)
     
-    # Broadcast update
     await manager.broadcast({
         "type": "product_updated",
         "product": product.to_dict()
@@ -333,7 +312,7 @@ async def update_product(product_id: str, updates: ProductUpdate):
 
 @app.delete("/api/products/{product_id}", tags=["Products"])
 async def delete_product(product_id: str):
-    """Delete a product."""
+    # Delete a product.
     success, message = engine.delete_product(product_id)
     
     if not success:
@@ -349,11 +328,7 @@ async def delete_product(product_id: str):
 
 @app.get("/api/products/search/{query}", tags=["Products"])
 async def search_products(query: str, limit: int = 10):
-    """
-    Search products by name prefix.
-    
-    DSA Used: Trie autocomplete - O(m + k)
-    """
+    # Search products by name prefix.
     products = engine.search_products(query, limit)
     return {
         "query": query,
@@ -368,11 +343,7 @@ async def search_products(query: str, limit: int = 10):
 
 @app.post("/api/transactions", tags=["Transactions"])
 async def create_transaction(transaction: TransactionCreate):
-    """
-    Queue a new transaction.
-    
-    DSA Used: Queue enqueue - O(1)
-    """
+    # Queue a new transaction.
     tx = engine.queue_transaction(
         product_id=transaction.product_id,
         trans_type=transaction.transaction_type,
@@ -389,15 +360,7 @@ async def create_transaction(transaction: TransactionCreate):
 
 @app.post("/api/transactions/process", tags=["Transactions"])
 async def process_transactions(batch_size: int = 10):
-    """
-    Process pending transactions.
-    
-    DSA Used:
-    - Queue dequeue - O(1)
-    - HashMap update - O(1)
-    - AVL Tree update - O(log n)
-    - Heap update - O(log n)
-    """
+    # Process pending transactions.
     results = engine.process_pending_transactions(batch_size)
     
     if results:
@@ -414,7 +377,7 @@ async def process_transactions(batch_size: int = 10):
 
 @app.get("/api/transactions/pending", tags=["Transactions"])
 async def get_pending_transactions(limit: int = 20):
-    """Get pending transactions."""
+    # Get pending transactions.
     pending = engine.transaction_queue.peek_pending(limit)
     return {
         "count": len(pending),
@@ -424,7 +387,7 @@ async def get_pending_transactions(limit: int = 20):
 
 @app.get("/api/transactions/history", tags=["Transactions"])
 async def get_transaction_history(limit: int = 50):
-    """Get transaction history."""
+    # Get transaction history.
     history = engine.transaction_queue.get_history(limit)
     return {
         "count": len(history),
@@ -438,11 +401,7 @@ async def get_transaction_history(limit: int = 50):
 
 @app.get("/api/alerts/low-stock", tags=["Alerts"])
 async def get_low_stock_alerts(limit: int = 10):
-    """
-    Get low stock alerts.
-    
-    DSA Used: Min-Heap - O(k log n)
-    """
+    # Get low stock alerts.
     alerts = engine.get_low_stock_alerts(limit)
     return {
         "count": len(alerts),
@@ -452,11 +411,7 @@ async def get_low_stock_alerts(limit: int = 10):
 
 @app.get("/api/alerts/top-sellers", tags=["Alerts"])
 async def get_top_sellers(limit: int = 10):
-    """
-    Get top selling products.
-    
-    DSA Used: Max-Heap - O(k log n)
-    """
+    # Get top selling products.
     sellers = engine.get_top_sellers(limit)
     return {
         "count": len(sellers),
@@ -470,26 +425,19 @@ async def get_top_sellers(limit: int = 10):
 
 @app.get("/api/analytics/summary", tags=["Analytics"])
 async def get_inventory_summary():
-    """Get inventory summary statistics."""
+    # Get inventory summary statistics.
     summary = engine.get_summary()
     return summary.to_dict()
 
 
 @app.post("/api/analytics/forecast", tags=["Analytics"])
 async def get_forecast(request: ForecastRequest):
-    """
-    Get demand forecast for a product.
-    
-    Uses time series analysis with SMA, EMA, or linear regression.
-    """
+    # Get demand forecast for a product.
     product = engine.get_product(request.product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # Generate sample historical data for demo
-    # In production, this would come from transaction history
     import random
-    import numpy as np
     
     base_demand = product.velocity if product.velocity > 0 else 10
     historical = [max(0, base_demand + random.gauss(0, base_demand * 0.3)) 
@@ -508,7 +456,7 @@ async def get_forecast(request: ForecastRequest):
 
 @app.get("/api/analytics/health", tags=["Analytics"])
 async def get_inventory_health():
-    """Get inventory health score."""
+    # Get inventory health score.
     products = [p.to_dict() for p in engine.get_all_products()]
     health = analytics.get_inventory_health_score(products)
     return health
@@ -516,12 +464,11 @@ async def get_inventory_health():
 
 @app.get("/api/analytics/trends/{product_id}", tags=["Analytics"])
 async def get_product_trends(product_id: str):
-    """Get trend analysis for a product."""
+    # Get trend analysis for a product.
     product = engine.get_product(product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # Generate sample data for demo
     import random
     sales_data = [max(0, 10 + random.gauss(0, 3)) for _ in range(30)]
     dates = [(datetime.now().replace(day=1)).strftime('%Y-%m-%d') 
@@ -539,7 +486,7 @@ async def get_product_trends(product_id: str):
 
 @app.get("/api/suppliers", tags=["Suppliers"])
 async def get_all_suppliers():
-    """Get all suppliers."""
+    # Get all suppliers.
     suppliers = list(engine.suppliers.values())
     return {
         "count": len(suppliers),
@@ -549,11 +496,7 @@ async def get_all_suppliers():
 
 @app.post("/api/suppliers", tags=["Suppliers"])
 async def create_supplier(supplier_data: SupplierCreate):
-    """
-    Add a new supplier.
-    
-    DSA Used: Graph vertex/edge addition
-    """
+    # Add a new supplier.
     supplier = Supplier(
         id=supplier_data.id,
         name=supplier_data.name,
@@ -574,11 +517,7 @@ async def create_supplier(supplier_data: SupplierCreate):
 
 @app.get("/api/suppliers/network", tags=["Suppliers"])
 async def get_supplier_network():
-    """
-    Get supplier network analysis.
-    
-    DSA Used: Graph algorithms (centrality, components)
-    """
+    # Get supplier network analysis.
     analysis = engine.get_supplier_network_analysis()
     graph_data = engine.supplier_graph.to_dict()
     
@@ -590,11 +529,7 @@ async def get_supplier_network():
 
 @app.get("/api/suppliers/for-product/{product_id}", tags=["Suppliers"])
 async def get_suppliers_for_product(product_id: str):
-    """
-    Find suppliers for a product.
-    
-    DSA Used: Graph traversal - O(V + E)
-    """
+    # Find suppliers for a product.
     suppliers = engine.get_suppliers_for_product(product_id)
     fastest = engine.find_fastest_supplier(product_id)
     
@@ -614,7 +549,7 @@ async def get_suppliers_for_product(product_id: str):
 
 @app.get("/api/visualizations/inventory-levels", tags=["Visualizations"])
 async def get_inventory_levels_chart():
-    """Generate inventory levels chart."""
+    # Generate inventory levels chart.
     products = engine.get_all_products()
     chart = visualizer.plot_inventory_levels(
         [p.to_dict() for p in products[:15]],
@@ -625,7 +560,7 @@ async def get_inventory_levels_chart():
 
 @app.get("/api/visualizations/categories", tags=["Visualizations"])
 async def get_category_chart():
-    """Generate category distribution chart."""
+    # Generate category distribution chart.
     summary = engine.get_summary()
     chart = visualizer.plot_category_distribution(
         summary.categories,
@@ -636,7 +571,7 @@ async def get_category_chart():
 
 @app.get("/api/visualizations/top-sellers", tags=["Visualizations"])
 async def get_top_sellers_chart():
-    """Generate top sellers chart."""
+    # Generate top sellers chart.
     sellers = engine.get_top_sellers(10)
     chart = visualizer.plot_top_sellers(
         [p.to_dict() for p in sellers],
@@ -647,7 +582,7 @@ async def get_top_sellers_chart():
 
 @app.get("/api/visualizations/health-gauge", tags=["Visualizations"])
 async def get_health_gauge():
-    """Generate health score gauge."""
+    # Generate health score gauge.
     products = [p.to_dict() for p in engine.get_all_products()]
     health = analytics.get_inventory_health_score(products)
     chart = visualizer.plot_health_gauge(
@@ -664,12 +599,11 @@ async def get_health_gauge():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    """WebSocket for real-time updates."""
+    # WebSocket for real-time updates
     await manager.connect(websocket)
     try:
         while True:
             data = await websocket.receive_text()
-            # Echo back and handle commands if needed
             await websocket.send_json({"received": data})
     except WebSocketDisconnect:
         manager.disconnect(websocket)
@@ -681,4 +615,4 @@ async def websocket_endpoint(websocket: WebSocket):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=False)

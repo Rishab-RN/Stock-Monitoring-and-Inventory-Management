@@ -89,10 +89,10 @@ class Product:
         return self.quantity <= self.reorder_point
     
     @property
-    def days_of_stock(self) -> float:
+    def days_of_stock(self) -> Optional[float]:
         """Estimated days of stock remaining."""
         if self.velocity <= 0:
-            return float('inf')
+            return None
         return self.quantity / self.velocity
     
     def to_dict(self) -> Dict[str, Any]:
@@ -187,7 +187,7 @@ class Supplier:
         )
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class Alert:
     """Alert model for notifications."""
     id: str

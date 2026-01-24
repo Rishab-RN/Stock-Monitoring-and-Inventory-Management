@@ -3,8 +3,6 @@
 
 A comprehensive inventory management system that demonstrates **6+ core data structures** combined with **data science analytics** and a modern **React frontend**.
 
-![Dashboard Preview](https://via.placeholder.com/800x400?text=StockFlow+Dashboard)
-
 ## 🚀 Features
 
 ### Data Structures Implemented
