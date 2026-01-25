@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# Data (Optional - usually don't commit local sensitive data, but sample data is fine)
+# backend/data/inventory_state.json
+
+# Render
+.render_state
