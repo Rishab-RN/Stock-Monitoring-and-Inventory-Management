@@ -2,19 +2,20 @@ services:
   # Backend Web Service
   - type: web
     name: stock-monitoring-backend
-    env: python
+    runtime: python
     buildCommand: pip install -r backend/requirements.txt
     startCommand: uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: "3.10.12"
 
-# Frontend Static Site
-staticSites:
-  - name: stock-monitoring-frontend
+  # Frontend Static Site
+  - type: web
+    name: stock-monitoring-frontend
+    runtime: static
     buildCommand: npm install && npm run build
-    publishDir: dist
-    root: frontend
+    staticPublishPath: ./dist
+    rootDir: frontend
     routes:
       - type: rewrite
         source: /**
