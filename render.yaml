@@ -7,10 +7,9 @@ services:
     startCommand: uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.12
+        value: "3.10.12"
 
 # Frontend Static Site
-# Note: Static sites must be defined in a separate 'staticSites' list, not under 'services'
 staticSites:
   - name: stock-monitoring-frontend
     buildCommand: npm install && npm run build
