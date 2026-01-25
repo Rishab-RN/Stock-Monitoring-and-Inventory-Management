@@ -14,10 +14,15 @@ services:
   - type: web
     name: stock-monitoring-frontend
     runtime: static
-    buildCommand: npm install && npm run build
-    # Directory to publish, relative to the REPO ROOT
+    # Remove rootDir to avoid ambiguity
+    # rootDir: frontend
+    
+    # Explicitly cd into directory for build
+    buildCommand: cd frontend && npm install && npm run build
+    
+    # Explicitly point to artifact from repo root
     staticPublishPath: frontend/dist
-    rootDir: frontend
+    
     routes:
       - type: rewrite
         source: /**
