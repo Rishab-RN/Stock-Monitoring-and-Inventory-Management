@@ -15,7 +15,8 @@ services:
     name: stock-monitoring-frontend
     runtime: static
     buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
+    # Directory to publish, relative to the REPO ROOT
+    staticPublishPath: frontend/dist
     rootDir: frontend
     routes:
       - type: rewrite
