@@ -4,8 +4,9 @@ services:
     name: stock-monitoring-backend
     runtime: python
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    rootDir: backend
     envVars:
       - key: PYTHON_VERSION
         value: "3.10.12"
@@ -14,14 +15,14 @@ services:
   - type: web
     name: stock-monitoring-frontend
     runtime: static
-    # Remove rootDir to avoid ambiguity
-    # rootDir: frontend
+    # Use standard rootDir configuration
+    rootDir: frontend
     
-    # Explicitly cd into directory for build
-    buildCommand: cd frontend && npm install && npm run build
+    # Build command runs relative to rootDir
+    buildCommand: npm install && npm run build
     
-    # Explicitly point to artifact from repo root
-    staticPublishPath: frontend/dist
+    # Artifact path relative to rootDir
+    staticPublishPath: ./dist
     
     routes:
       - type: rewrite
