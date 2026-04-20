@@ -117,13 +117,6 @@ This project demonstrates:
 - ✅ Full-stack development (FastAPI + React)
 - ✅ Modern software engineering practices
 
-## 👥 Team
-
 - **Project**: Stock Monitoring & Inventory Management
 - **Course**: Data Structures & Algorithms
 - **Type**: Experiential Learning Project
-- **By**: Rishab Rajesh Nayak & Nithesh B S
-
-## 📄 License
-
-This project is for educational purposes.
