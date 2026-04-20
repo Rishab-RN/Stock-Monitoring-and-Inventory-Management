@@ -117,6 +117,3 @@ This project demonstrates:
 - ✅ Full-stack development (FastAPI + React)
 - ✅ Modern software engineering practices
 
-- **Project**: Stock Monitoring & Inventory Management
-- **Course**: Data Structures & Algorithms
-- **Type**: Experiential Learning Project
